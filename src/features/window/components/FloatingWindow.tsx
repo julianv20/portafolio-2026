@@ -8,6 +8,17 @@ import ContactSection from "../../sections/contact/components/ContactSection";
 
 type ResizeDirection = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
+// Helper para obtener coordenadas uniformes de mouse y touch
+const getEventCoordinates = (e: MouseEvent | TouchEvent | React.MouseEvent | React.TouchEvent) => {
+  if ('touches' in e) {
+    // Evento táctil
+    const touch = e.touches[0] || e.changedTouches[0];
+    return { clientX: touch.clientX, clientY: touch.clientY };
+  }
+  // Evento de mouse
+  return { clientX: (e as MouseEvent | React.MouseEvent).clientX, clientY: (e as MouseEvent | React.MouseEvent).clientY };
+};
+
 interface FloatingWindowProps {
   window: WindowState;
   onClose: () => void;
@@ -41,22 +52,23 @@ export default function FloatingWindow({
     direction: "" as ResizeDirection,
   });
 
-  // Drag Handler
-  const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Drag Handler - Soporta mouse y touch
+  const handleDragStart = (e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     if (windowState.isMaximized) return;
 
+    const coords = getEventCoordinates(e);
     setIsDragging(true);
     dragStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
+      x: coords.clientX,
+      y: coords.clientY,
       windowX: windowState.position.x,
       windowY: windowState.position.y,
     };
   };
 
-  // Resize Handler
+  // Resize Handler - Soporta mouse y touch
   const handleResizeStart = (
-    e: React.MouseEvent<HTMLDivElement>,
+    e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
     direction: ResizeDirection
   ) => {
     if (windowState.isMaximized) return;
@@ -64,18 +76,20 @@ export default function FloatingWindow({
     e.stopPropagation();
     e.preventDefault();
 
+    const coords = getEventCoordinates(e);
+
     console.log("🔧 Resize Start:", {
       direction,
-      startX: e.clientX,
-      startY: e.clientY,
+      startX: coords.clientX,
+      startY: coords.clientY,
       currentSize: windowState.size,
       currentPosition: windowState.position,
     });
 
     setIsResizing(true);
     resizeStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
+      x: coords.clientX,
+      y: coords.clientY,
       width: windowState.size.width,
       height: windowState.size.height,
       windowX: windowState.position.x,
@@ -84,13 +98,15 @@ export default function FloatingWindow({
     };
   };
 
-  // Global mouse move handler
+  // Global move handler - Soporta mouse y touch
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      const coords = getEventCoordinates(e);
+
       // Handle dragging
       if (isDragging) {
-        const deltaX = e.clientX - dragStartRef.current.x;
-        const deltaY = e.clientY - dragStartRef.current.y;
+        const deltaX = coords.clientX - dragStartRef.current.x;
+        const deltaY = coords.clientY - dragStartRef.current.y;
 
         const newX = dragStartRef.current.windowX + deltaX;
         const newY = dragStartRef.current.windowY + deltaY;
@@ -103,11 +119,13 @@ export default function FloatingWindow({
 
       // Handle resizing
       if (isResizing) {
-        const MIN_WIDTH = 300;
-        const MIN_HEIGHT = 200;
+        // Tamaños mínimos responsive
+        const isMobile = window.innerWidth < 768;
+        const MIN_WIDTH = isMobile ? 280 : 300;
+        const MIN_HEIGHT = isMobile ? 200 : 200;
 
-        const deltaX = e.clientX - resizeStartRef.current.x;
-        const deltaY = e.clientY - resizeStartRef.current.y;
+        const deltaX = coords.clientX - resizeStartRef.current.x;
+        const deltaY = coords.clientY - resizeStartRef.current.y;
 
         let newWidth = resizeStartRef.current.width;
         let newHeight = resizeStartRef.current.height;
@@ -163,18 +181,34 @@ export default function FloatingWindow({
       }
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       setIsDragging(false);
       setIsResizing(false);
     };
 
     if (isDragging || isResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
+      // Prevenir scroll en móvil durante drag/resize
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+
+      // Event listeners para mouse
+      document.addEventListener("mousemove", handleMove);
+      document.addEventListener("mouseup", handleEnd);
+
+      // Event listeners para touch
+      document.addEventListener("touchmove", handleMove, { passive: false });
+      document.addEventListener("touchend", handleEnd);
 
       return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
+        // Restaurar scroll
+        document.body.style.overflow = '';
+        document.body.style.touchAction = '';
+
+        // Limpiar listeners
+        document.removeEventListener("mousemove", handleMove);
+        document.removeEventListener("mouseup", handleEnd);
+        document.removeEventListener("touchmove", handleMove);
+        document.removeEventListener("touchend", handleEnd);
       };
     }
   }, [isDragging, isResizing, windowState.id, onUpdatePosition, onUpdateSize]);
@@ -199,54 +233,62 @@ export default function FloatingWindow({
       {/* Resize handles - OUTSIDE the main window container */}
       {!windowState.isMaximized && (
         <>
-          {/* Top border */}
+          {/* Top border - más grande en móvil */}
           <div
-            className="absolute left-0 right-0 h-[8px] cursor-n-resize"
+            className="absolute left-0 right-0 h-[8px] md:h-[8px] cursor-n-resize touch-none"
             style={{ top: -4, zIndex: 1000 }}
             onMouseDown={(e) => handleResizeStart(e, "n")}
+            onTouchStart={(e) => handleResizeStart(e, "n")}
           />
 
-          {/* Bottom border */}
+          {/* Bottom border - más grande en móvil */}
           <div
-            className="absolute left-0 right-0 h-[8px] cursor-s-resize"
+            className="absolute left-0 right-0 h-[8px] md:h-[8px] cursor-s-resize touch-none"
             style={{ bottom: -4, zIndex: 1000 }}
             onMouseDown={(e) => handleResizeStart(e, "s")}
+            onTouchStart={(e) => handleResizeStart(e, "s")}
           />
 
-          {/* Left border */}
+          {/* Left border - más grande en móvil */}
           <div
-            className="absolute top-0 bottom-0 w-[8px] cursor-w-resize"
+            className="absolute top-0 bottom-0 w-[8px] md:w-[8px] cursor-w-resize touch-none"
             style={{ left: -4, zIndex: 1000 }}
             onMouseDown={(e) => handleResizeStart(e, "w")}
+            onTouchStart={(e) => handleResizeStart(e, "w")}
           />
 
-          {/* Right border */}
+          {/* Right border - más grande en móvil */}
           <div
-            className="absolute top-0 bottom-0 w-[8px] cursor-e-resize"
+            className="absolute top-0 bottom-0 w-[8px] md:w-[8px] cursor-e-resize touch-none"
             style={{ right: -4, zIndex: 1000 }}
             onMouseDown={(e) => handleResizeStart(e, "e")}
+            onTouchStart={(e) => handleResizeStart(e, "e")}
           />
 
-          {/* Corner handles */}
+          {/* Corner handles - más grandes en móvil */}
           <div
-            className="absolute w-[16px] h-[16px] cursor-nw-resize"
-            style={{ top: -4, left: -4, zIndex: 1001 }}
+            className="absolute w-[24px] h-[24px] md:w-[16px] md:h-[16px] cursor-nw-resize touch-none"
+            style={{ top: -8, left: -8, zIndex: 1001 }}
             onMouseDown={(e) => handleResizeStart(e, "nw")}
+            onTouchStart={(e) => handleResizeStart(e, "nw")}
           />
           <div
-            className="absolute w-[16px] h-[16px] cursor-ne-resize"
-            style={{ top: -4, right: -4, zIndex: 1001 }}
+            className="absolute w-[24px] h-[24px] md:w-[16px] md:h-[16px] cursor-ne-resize touch-none"
+            style={{ top: -8, right: -8, zIndex: 1001 }}
             onMouseDown={(e) => handleResizeStart(e, "ne")}
+            onTouchStart={(e) => handleResizeStart(e, "ne")}
           />
           <div
-            className="absolute w-[16px] h-[16px] cursor-sw-resize"
-            style={{ bottom: -4, left: -4, zIndex: 1001 }}
+            className="absolute w-[24px] h-[24px] md:w-[16px] md:h-[16px] cursor-sw-resize touch-none"
+            style={{ bottom: -8, left: -8, zIndex: 1001 }}
             onMouseDown={(e) => handleResizeStart(e, "sw")}
+            onTouchStart={(e) => handleResizeStart(e, "sw")}
           />
           <div
-            className="absolute w-[16px] h-[16px] cursor-se-resize"
-            style={{ bottom: -4, right: -4, zIndex: 1001 }}
+            className="absolute w-[24px] h-[24px] md:w-[16px] md:h-[16px] cursor-se-resize touch-none"
+            style={{ bottom: -8, right: -8, zIndex: 1001 }}
             onMouseDown={(e) => handleResizeStart(e, "se")}
+            onTouchStart={(e) => handleResizeStart(e, "se")}
           />
         </>
       )}

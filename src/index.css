@@ -25,36 +25,137 @@ body {
   animation: slideUp 0.6s ease-out forwards;
 }
 
-/* Animaciones de parpadeo para estrellas */
+/* Animaciones de parpadeo para estrellas - Muy sutiles */
 @keyframes twinkle {
   0%, 100% {
-    opacity: 0.1;
+    opacity: 0.15;
     transform: scale(1);
   }
   50% {
-    opacity: 0.3;
-    transform: scale(1.1);
+    opacity: 0.25;
+    transform: scale(1.02);
   }
 }
 
 @keyframes twinkleSlow {
   0%, 100% {
-    opacity: 0.05;
+    opacity: 0.15;
     transform: scale(1);
   }
   50% {
-    opacity: 0.25;
-    transform: scale(1.15);
+    opacity: 0.22;
+    transform: scale(1.01);
   }
 }
 
 @keyframes twinkleFast {
   0%, 100% {
-    opacity: 0.08;
+    opacity: 0.15;
     transform: scale(1);
   }
   50% {
-    opacity: 0.35;
-    transform: scale(1.2);
+    opacity: 0.28;
+    transform: scale(1.03);
+  }
+}
+
+/* Estilo de estrella con efecto de brillo */
+.star {
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  box-shadow:
+    /* Glow interno brillante */
+    0 0 3px 2px rgba(255, 255, 255, 1),
+    /* Rayos principales (4 direcciones) */
+    0 0 10px 3px rgba(255, 255, 255, 0.9),
+    0 0 15px 4px rgba(255, 255, 255, 0.7),
+    /* Rayos largos (cruz) */
+    0 -18px 5px 0px rgba(255, 255, 255, 0.6),
+    0 18px 5px 0px rgba(255, 255, 255, 0.6),
+    -18px 0 5px 0px rgba(255, 255, 255, 0.6),
+    18px 0 5px 0px rgba(255, 255, 255, 0.6),
+    /* Glow exterior */
+    0 0 25px 6px rgba(255, 255, 255, 0.4);
+}
+
+.star-small {
+  width: 1.5px;
+  height: 1.5px;
+  box-shadow:
+    0 0 3px 2px rgba(255, 255, 255, 1),
+    0 0 8px 3px rgba(255, 255, 255, 0.8),
+    0 0 12px 3px rgba(255, 255, 255, 0.6),
+    0 -12px 4px 0px rgba(255, 255, 255, 0.5),
+    0 12px 4px 0px rgba(255, 255, 255, 0.5),
+    -12px 0 4px 0px rgba(255, 255, 255, 0.5),
+    12px 0 4px 0px rgba(255, 255, 255, 0.5),
+    0 0 20px 4px rgba(255, 255, 255, 0.3);
+}
+
+.star-large {
+  width: 3px;
+  height: 3px;
+  box-shadow:
+    0 0 4px 3px rgba(255, 255, 255, 1),
+    0 0 12px 4px rgba(255, 255, 255, 0.95),
+    0 0 18px 5px rgba(255, 255, 255, 0.8),
+    0 -25px 6px 0px rgba(255, 255, 255, 0.7),
+    0 25px 6px 0px rgba(255, 255, 255, 0.7),
+    -25px 0 6px 0px rgba(255, 255, 255, 0.7),
+    25px 0 6px 0px rgba(255, 255, 255, 0.7),
+    0 0 30px 7px rgba(255, 255, 255, 0.5);
+}
+
+/* Animaciones de movimiento diagonal (solo posición) para estrellas */
+@keyframes starMove {
+  0% {
+    transform: translate(-100vw, -100vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100vw, 100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes starMoveSlow {
+  0% {
+    transform: translate(-100vw, -100vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100vw, 100vh);
+    opacity: 0;
+  }
+}
+
+@keyframes starMoveFast {
+  0% {
+    transform: translate(-100vw, -100vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(100vw, 100vh);
+    opacity: 0;
   }
 }

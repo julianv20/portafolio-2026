@@ -7,7 +7,7 @@ interface WindowHeaderProps {
   onMinimize: () => void;
   onMaximize: () => void;
   isMaximized: boolean;
-  onDragStart?: (e: ReactMouseEvent<HTMLDivElement>) => void;
+  onDragStart?: (e: ReactMouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => void;
 }
 
 export default function WindowHeader({
@@ -31,6 +31,7 @@ export default function WindowHeader({
         className="text-sm font-semibold cursor-move flex-1"
         style={{ color: '#F7F7F7' }}
         onMouseDown={onDragStart}
+        onTouchStart={onDragStart}
       >
         {title}
       </h3>
